@@ -106,6 +106,73 @@ Quaternion Quaternion::fromRotationMatrix(const Mat3& R) {
     return Quaternion(w, x, y, z).normalize();
 }
 
+Quaternion Quaternion::slerp(const Quaternion& q1, const Quaternion& q2, double t) {
+    if (t < 0.0 || t > 1.0) {
+        throw std::out_of_range("Interpolation parameter t must be in [0, 1]");
+    }
+
+    Quaternion qa = q1.normalize();
+    Quaternion qb = q2.normalize();
+
+    double dot = qa.w * qb.w + qa.x * qb.x + qa.y * qb.y + qa.z * qb.z;
+
+    if (dot < 0.0) {
+        qb = Quaternion(-qb.w, -qb.x, -qb.y, -qb.z);
+        dot = -dot;
+    }
+
+    if (dot > 0.9995) {
+        Quaternion result(
+            qa.w + t * (qb.w - qa.w),
+            qa.x + t * (qb.x - qa.x),
+            qa.y + t * (qb.y - qa.y),
+            qa.z + t * (qb.z - qa.z));
+        return result.normalize();
+    }
+
+    dot = std::fmax(-1.0, std::fmin(1.0, dot));
+    double theta0 = std::acos(dot);
+    double theta = theta0 * t;
+
+    double sinTheta0 = std::sin(theta0);
+    double sinTheta = std::sin(theta);
+
+    double s0 = std::cos(theta) - dot * sinTheta / sinTheta0;
+    double s1 = sinTheta / sinTheta0;
+
+    return Quaternion(
+               s0 * qa.w + s1 * qb.w,
+               s0 * qa.x + s1 * qb.x,
+               s0 * qa.y + s1 * qb.y,
+               s0 * qa.z + s1 * qb.z)
+        .normalize();
+}
+
+Mat3 Quaternion::toRotationMatrix() const {
+    Quaternion q = normalize();
+
+    double xx = q.x * q.x;
+    double yy = q.y * q.y;
+    double zz = q.z * q.z;
+    double xy = q.x * q.y;
+    double xz = q.x * q.z;
+    double yz = q.y * q.z;
+    double wx = q.w * q.x;
+    double wy = q.w * q.y;
+    double wz = q.w * q.z;
+
+    double m[3][3] = {
+        {1.0 - 2.0 * (yy + zz), 2.0 * (xy - wz), 2.0 * (xz + wy)},
+        {2.0 * (xy + wz), 1.0 - 2.0 * (xx + zz), 2.0 * (yz - wx)},
+        {2.0 * (xz - wy), 2.0 * (yz + wx), 1.0 - 2.0 * (xx + yy)}};
+
+    return Mat3(m);
+}
+
+double Quaternion::getW() const {
+    return w;
+}
+
 double Quaternion::getX() const {
     return x;
 }
