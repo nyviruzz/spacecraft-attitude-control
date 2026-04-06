@@ -9,7 +9,7 @@ private:
 
 public:
 	Mat3();
-	Mat3(double d[3][3]);
+	Mat3(const double d[3][3]);
 
 	static Mat3 identity();
 

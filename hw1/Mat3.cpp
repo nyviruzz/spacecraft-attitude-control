@@ -10,7 +10,7 @@ Mat3::Mat3() {
     }
 }
 
-Mat3::Mat3(double d[3][3]) {
+Mat3::Mat3(const double d[3][3]) {
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             data[i][j] = d[i][j];
